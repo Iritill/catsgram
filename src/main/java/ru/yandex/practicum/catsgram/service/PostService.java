@@ -8,6 +8,9 @@ import ru.yandex.practicum.catsgram.model.User;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.Integer.parseInt;
 
 @Service
 public class PostService {
@@ -19,8 +22,40 @@ public class PostService {
         this.userService = userService;
     }
 
-    public Collection<Post> findAll() {
-        return posts.values();
+    public Collection<Post> findAll(String sort, String size, String from) {
+        List<Post> postForFind = posts.values().stream().toList().subList(parseInt(from) - 1, posts.size());
+        if (sort.equals("asc")) {
+            return postForFind.stream().sorted((post1, post2) -> {
+                if (post1.equals(post2)) {
+                    return 0;
+                } else if (post1.getPostDate() == null) {
+                    return 1;
+                } else if (post2.getPostDate() == null) {
+                    return -1;
+                } else if (post1.getPostDate().getEpochSecond() - post2.getPostDate().getEpochSecond() > 0) {
+                    return -1;
+                }
+                return 1;
+            }).limit((parseInt(size))).collect(Collectors.toSet());
+        }
+
+        if (sort.equals("desc")) {
+            return postForFind.stream().sorted((post1, post2) -> {
+                if (post1.equals(post2)) {
+                    return 0;
+                } else if (post1.getPostDate() == null) {
+                    return 1;
+                } else if (post2.getPostDate() == null) {
+                    return -1;
+                } else if (post1.getPostDate().getEpochSecond() - post2.getPostDate().getEpochSecond() > 0) {
+                    return 1;
+                }
+                return -1;
+            }).limit((parseInt(size))).collect(Collectors.toSet());
+        }
+
+        return null;
+
     }
 
     public Post create(Post post) {
@@ -39,6 +74,7 @@ public class PostService {
         post.setPostDate(Instant.now());
         // сохраняем новую публикацию в памяти приложения
         posts.put(post.getId(), post);
+
         return post;
     }
 
